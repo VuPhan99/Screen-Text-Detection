@@ -127,6 +127,7 @@ while True:
 
 	# resize the frame, maintaining the aspect ratio
 	frame = imutils.resize(frame, width=1280)
+	frame = cv2.putText(frame, 'OpenCV', (640, 680) , cv2.FONT_HERSHEY_SIMPLEX ,  1, (255, 0, 0) , 1, cv2.LINE_AA) 
 	orig = frame.copy()
 
 	# if our frame dimensions are None, we still need to compute the
@@ -170,15 +171,17 @@ while True:
 		configuration = ("-l eng --oem 1 --psm 8")
 		##This will recognize the text from the image of bounding box
 		text = pytesseract.image_to_string(r, config=configuration)
-
-
+		#Ideas: sau khi ve hinh vuong detect thi write below duoi cai detect do'
 		print(text)
+		
 
 	# update the FPS counter
 	fps.update()
 	
 	
 	# show the output frame
+	# orig = cv2.putText(frame, 'OpenCV', (50, 50) , cv2.FONT_HERSHEY_SIMPLEX ,  
+    #                1, (255, 0, 0) , 1, cv2.LINE_AA) 
 	cv2.imshow("Text Detection", orig)
 	key = cv2.waitKey(10) & 0xFF
 	# if the `q` key was pressed, break from the loop
