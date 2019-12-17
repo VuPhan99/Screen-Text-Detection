@@ -118,7 +118,7 @@ while True:
 	# VideoStream or VideoCapture object
 	frame = vs.read()
 	frame = frame[1] if args.get("video", False) else frame
-
+	
 	# check to see if we have reached the end of the stream
 	if frame is None:
 		break
@@ -163,11 +163,11 @@ while True:
 
 	# update the FPS counter
 	fps.update()
-
+	
+	
 	# show the output frame
 	cv2.imshow("Text Detection", orig)
 	key = cv2.waitKey(1) & 0xFF
-
 	# if the `q` key was pressed, break from the loop
 	if key == ord("q"):
 		break
