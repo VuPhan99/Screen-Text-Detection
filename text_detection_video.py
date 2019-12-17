@@ -70,8 +70,7 @@ def decode_predictions(scores, geometry):
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
-# ap.add_argument("-east", "--east", type=str, required=True,
-ap.add_argument("-east", "--east", type=str,
+ap.add_argument("-east", "--east", type=str, required=True,
 	help="path to input EAST text detector")
 ap.add_argument("-v", "--video", type=str,
 	help="path to optinal input video file")
