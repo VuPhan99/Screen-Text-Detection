@@ -11,64 +11,11 @@ import imutils
 import time
 import cv2
 import pytesseract
+import concurrent.futures
+from decode_predictions import decode_predictions
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-def decode_predictions(scores, geometry):
-	# grab the number of rows and columns from the scores volume, then
-	# initialize our set of bounding box rectangles and corresponding
-	# confidence scores
-	(numRows, numCols) = scores.shape[2:4]
-	rects = []
-	confidences = []
 
-	# loop over the number of rows
-	for y in range(0, numRows):
-		# extract the scores (probabilities), followed by the
-		# geometrical data used to derive potential bounding box
-		# coordinates that surround text
-		scoresData = scores[0, 0, y]
-		xData0 = geometry[0, 0, y]
-		xData1 = geometry[0, 1, y]
-		xData2 = geometry[0, 2, y]
-		xData3 = geometry[0, 3, y]
-		anglesData = geometry[0, 4, y]
-
-		# loop over the number of columns
-		for x in range(0, numCols):
-			# if our score does not have sufficient probability,
-			# ignore it
-			if scoresData[x] < args["min_confidence"]:
-				continue
-
-			# compute the offset factor as our resulting feature
-			# maps will be 4x smaller than the input image
-			(offsetX, offsetY) = (x * 4.0, y * 4.0)
-
-			# extract the rotation angle for the prediction and
-			# then compute the sin and cosine
-			angle = anglesData[x]
-			cos = np.cos(angle)
-			sin = np.sin(angle)
-
-			# use the geometry volume to derive the width and height
-			# of the bounding box
-			h = xData0[x] + xData2[x]
-			w = xData1[x] + xData3[x]
-
-			# compute both the starting and ending (x, y)-coordinates
-			# for the text prediction bounding box
-			endX = int(offsetX + (cos * xData1[x]) + (sin * xData2[x]))
-			endY = int(offsetY - (sin * xData1[x]) + (cos * xData2[x]))
-			startX = int(endX - w)
-			startY = int(endY - h)
-
-			# add the bounding box coordinates and probability score
-			# to our respective lists
-			rects.append((startX, startY, endX, endY))
-			confidences.append(scoresData[x])
-
-	# return a tuple of the bounding boxes and associated confidences
-	return (rects, confidences)
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -127,7 +74,6 @@ while True:
 
 	# resize the frame, maintaining the aspect ratio
 	frame = imutils.resize(frame, width=1280)
-	frame = cv2.putText(frame, 'OpenCV', (640, 680) , cv2.FONT_HERSHEY_SIMPLEX ,  1, (255, 0, 0) , 1, cv2.LINE_AA) 
 	orig = frame.copy()
 
 	# if our frame dimensions are None, we still need to compute the
@@ -149,7 +95,14 @@ while True:
 
 	# decode the predictions, then  apply non-maxima suppression to
 	# suppress weak, overlapping bounding boxes
-	(rects, confidences) = decode_predictions(scores, geometry)
+
+
+	#__Phoenix get rects, confidences from threading
+	with concurrent.futures.ThreadPoolExecutor() as executor:
+		future = executor.submit(decode_predictions, scores, geometry, args)
+		(rects, confidences) = future.result()
+
+	# (rects, confidences) = decode_predictions(scores, geometry) #old function
 	boxes = non_max_suppression(np.array(rects), probs=confidences)
 
 	# loop over the bounding boxes
@@ -166,14 +119,19 @@ while True:
 
 		#extract the region of interest
 		r = orig[startY:endY, startX:endX]
-
+		
 		#configuration setting to convert image to string.  
 		configuration = ("-l eng --oem 1 --psm 8")
 		##This will recognize the text from the image of bounding box
 		text = pytesseract.image_to_string(r, config=configuration)
 		#Ideas: sau khi ve hinh vuong detect thi write below duoi cai detect do'
 		print(text)
+		cv2.putText(orig, text, (startX, startY + 100),
+			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 		
+		# show the output image
+		# cv2.imshow("Text Detection", output)
+		# cv2.waitKey(10)
 
 	# update the FPS counter
 	fps.update()
