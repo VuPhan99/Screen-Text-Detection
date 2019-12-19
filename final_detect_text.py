@@ -39,7 +39,8 @@ image_gray=cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
 image_gray=cv2.GaussianBlur(image_gray,(5,5),0)
 _, im_th=cv2.threshold(image_gray,155,255,cv2.THRESH_BINARY_INV)
 
-orig = image.copy()
+orig = im_th.copy()
+stockImage = image.copy()
 (H, W) = image.shape[:2]
 
 
@@ -150,11 +151,12 @@ for (startX, startY, endX, endY) in boxes:
 	# cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 	#extract the region of interest
 	r = orig[startY:endY, startX:endX]
-	
+	rOfStockImage = stockImage[startY:endY, startX:endX]
 	#configuration setting to convert image to string.  
 	configuration = ("-l eng --oem 1 --psm 8")
 	##This will recognize the text from the image of bounding box
 	text = pytesseract.image_to_string(r, config=configuration)
+	print("stock text:" + text)
 	# Ideas: sau khi ve hinh vuong detect thi write below duoi cai detect do'
 	textTranslated = translator.translate(
 		text, src='en', dest='vi'
@@ -162,14 +164,14 @@ for (startX, startY, endX, endY) in boxes:
 	# print(f'{textTranslated.text}')
 	text = textTranslated.text
 	
-	cv2.rectangle(orig, (startX, startY), (endX, endY), rectangle_bgr, cv2.FILLED)
+	cv2.rectangle(stockImage, (startX, startY), (endX, endY), rectangle_bgr, cv2.FILLED)
 	fontpath = "./fonts/SanFrancisco.otf" 
 	font = ImageFont.truetype(fontpath, 25)
-	img_pil = Image.fromarray(orig)
+	img_pil = Image.fromarray(stockImage)
 	draw = ImageDraw.Draw(img_pil)
 	draw.text((startX, startY),  text, font = font, fill = (0, 0, 255))
-	orig = np.array(img_pil)
+	stockImage = np.array(img_pil)
 
 # show the output image
-cv2.imshow("Text Detection", orig)
+cv2.imshow("Text Detection", stockImage)
 cv2.waitKey(0)

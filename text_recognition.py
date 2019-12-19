@@ -164,7 +164,7 @@ for (startX, startY, endX, endY) in boxes:
 	# treating the ROI as a single line of text
 	config = ("-l eng --oem 1 --psm 7")
 	text = pytesseract.image_to_string(roi, config=config)
-	resultsText.append(text+" ")
+	print(text)
 	# print("text: ", text)
 	# add the bounding box coordinates and OCR'd text to the list
 	# of results
