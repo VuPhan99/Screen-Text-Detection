@@ -1,7 +1,3 @@
-# USAGE
-# python text_detection.py --image images/lebron_james.jpg --east frozen_east_text_detection.pb
-
-# import the necessary packages
 from imutils.object_detection import non_max_suppression
 import numpy as np
 import argparse
