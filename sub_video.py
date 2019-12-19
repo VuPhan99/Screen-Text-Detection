@@ -104,7 +104,6 @@ while True:
 
 	# (rects, confidences) = decode_predictions(scores, geometry) #old function
 	boxes = non_max_suppression(np.array(rects), probs=confidences)
-
 	# loop over the bounding boxes
 	for (startX, startY, endX, endY) in boxes:
 		# scale the bounding box coordinates based on the respective
@@ -129,9 +128,6 @@ while True:
 		cv2.putText(orig, text, (startX, startY + 100),
 			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 		
-		# show the output image
-		# cv2.imshow("Text Detection", output)
-		# cv2.waitKey(10)
 
 	# update the FPS counter
 	fps.update()
