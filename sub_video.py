@@ -13,10 +13,15 @@ import cv2
 import pytesseract
 import concurrent.futures
 from decode_predictions import decode_predictions
+from googletrans import Translator
+from PIL import ImageFont, ImageDraw, Image
+import re 
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-
+translator = Translator(service_urls=[
+      'translate.google.com.vn',
+    ])
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-east", "--east", type=str, required=True,
@@ -114,7 +119,8 @@ while True:
 		endY = int(endY * rH)
 
 		# draw the bounding box on the frame
-		cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+		rectangle_bgr = (255, 255, 255)
+		# cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 
 		#extract the region of interest
 		r = orig[startY:endY, startX:endX]
@@ -123,10 +129,28 @@ while True:
 		configuration = ("-l eng --oem 1 --psm 8")
 		##This will recognize the text from the image of bounding box
 		text = pytesseract.image_to_string(r, config=configuration)
+
 		#Ideas: sau khi ve hinh vuong detect thi write below duoi cai detect do'
-		print(text)
-		cv2.putText(orig, text, (startX, startY + 100),
-			cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+		# print(text)
+		textTranslated = translator.translate(
+			text, src='en', dest='vi'
+		)
+		# print(f'{textTranslated.text}')
+		text = textTranslated.text
+		
+		cv2.rectangle(orig, (startX, startY), (endX, endY), rectangle_bgr, cv2.FILLED)
+
+		fontpath = "./fonts/SanFrancisco.otf" 
+		font = ImageFont.truetype(fontpath, 10)
+		img_pil = Image.fromarray(orig)
+		draw = ImageDraw.Draw(img_pil)
+		draw.text((startX, startY),  text, font = font, fill = (0, 0, 255))
+		orig = np.array(img_pil)
+
+
+
+		# cv2.putText(orig, text, (startX, startY + 20),
+		# 	cv2.FONT_HERSHEY_TRIPLEX, 1, (0, 0, 255), 1)
 		
 
 	# update the FPS counter
@@ -137,7 +161,7 @@ while True:
 	# orig = cv2.putText(frame, 'OpenCV', (50, 50) , cv2.FONT_HERSHEY_SIMPLEX ,  
     #                1, (255, 0, 0) , 1, cv2.LINE_AA) 
 	cv2.imshow("Text Detection", orig)
-	key = cv2.waitKey(10) & 0xFF
+	key = cv2.waitKey(1) & 0xFF
 	# if the `q` key was pressed, break from the loop
 	if key == ord("q"):
 		break
